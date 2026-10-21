@@ -1,4 +1,3 @@
-
 -- Set <space> as the leader key
 -- See `:h mapleader`
 -- NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
@@ -22,9 +21,9 @@ vim.o.number = true -- Show line numbers in a column.
 -- increase startup-time. Remove this option if you want your OS clipboard to remain independent.
 -- See `:h 'clipboard'`
 vim.api.nvim_create_autocmd('UIEnter', {
-  callback = function()
-    vim.o.clipboard = 'unnamedplus'
-  end,
+    callback = function()
+        vim.o.clipboard = 'unnamedplus'
+    end,
 })
 
 -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
@@ -63,10 +62,10 @@ vim.keymap.set({ 'n' }, '<A-l>', '<C-w>l')
 -- Highlight when yanking (copying) text.
 -- Try it with `yap` in normal mode. See `:h vim.hl.on_yank()`
 vim.api.nvim_create_autocmd('TextYankPost', {
-  desc = 'Highlight when yanking (copying) text',
-  callback = function()
-    vim.hl.on_yank()
-  end,
+    desc = 'Highlight when yanking (copying) text',
+    callback = function()
+        vim.hl.on_yank()
+    end,
 })
 
 -- USER COMMANDS: DEFINE CUSTOM COMMANDS
@@ -75,9 +74,9 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 
 -- Create a command `:GitBlameLine` that print the git blame for the current line
 vim.api.nvim_create_user_command('GitBlameLine', function()
-  local line_number = vim.fn.line('.') -- Get the current line number. See `:h line()`
-  local filename = vim.api.nvim_buf_get_name(0)
-  print(vim.system({ 'git', 'blame', '-L', line_number .. ',+1', filename }):wait().stdout)
+    local line_number = vim.fn.line('.') -- Get the current line number. See `:h line()`
+    local filename = vim.api.nvim_buf_get_name(0)
+    print(vim.system({ 'git', 'blame', '-L', line_number .. ',+1', filename }):wait().stdout)
 end, { desc = 'Print the git blame for the current line' })
 
 -- PLUGINS
@@ -90,75 +89,90 @@ vim.cmd('packadd! nohlsearch')
 
 -- Install third-party plugins via "vim.pack.add()".
 vim.pack.add({
-  -- Quickstart configs for LSP
-  'https://github.com/neovim/nvim-lspconfig',
-  -- Fuzzy picker
-  'https://github.com/ibhagwan/fzf-lua',
-  -- Autocompletion
-  'https://github.com/nvim-mini/mini.completion',
-  -- Enhanced quickfix/loclist
-  'https://github.com/stevearc/quicker.nvim',
-  -- Git integration
-  'https://github.com/lewis6991/gitsigns.nvim',
-  -- Icons
-  'https://github.com/nvim-tree/nvim-web-devicons',
-  -- Shows hints for the key
-  'https://github.com/folke/which-key.nvim',
-  -- todos
-  'https://github.com/folke/todo-comments.nvim',
+    -- Quickstart configs for LSP
+    'https://github.com/neovim/nvim-lspconfig',
+    -- Fuzzy picker
+    'https://github.com/ibhagwan/fzf-lua',
+    -- Autocompletion
+    'https://github.com/nvim-mini/mini.completion',
+    -- Enhanced quickfix/loclist
+    'https://github.com/stevearc/quicker.nvim',
+    -- Git integration
+    'https://github.com/lewis6991/gitsigns.nvim',
+    -- Icons
+    'https://github.com/nvim-tree/nvim-web-devicons',
+    -- Shows hints for the key
+    'https://github.com/folke/which-key.nvim',
+    -- todos
+    'https://github.com/folke/todo-comments.nvim',
+    -- formatter
+    'https://github.com/stevearc/conform.nvim',
 })
 
-require('fzf-lua').setup { fzf_colors = true }
-require('mini.completion').setup {}
-require('quicker').setup {}
-require('gitsigns').setup {}
-require('nvim-web-devicons').setup {}
-require('which-key').setup { delay = 0 }
-require('todo-comments').setup {}
+require('fzf-lua').setup({ fzf_colors = true })
+require('mini.completion').setup({})
+require('quicker').setup({})
+require('gitsigns').setup({})
+require('nvim-web-devicons').setup({})
+require('which-key').setup({ delay = 0 })
+require('todo-comments').setup({})
+require('conform').setup({
+    formatters_by_ft = {
+        lua = { 'stylua' },
+        -- Conform will run multiple formatters sequentially
+        python = { 'black' },
+        -- You can customize some of the format options for the filetype (:help conform.format)
+        rust = { 'rustfmt', lsp_format = 'fallback' },
+        -- Conform will run the first available formatter
+        javascript = { 'prettierd', 'prettier', stop_after_first = true },
+    },
+})
+vim.api.nvim_create_user_command('Format', function()
+    require('conform').format()
+end, { desc = 'Format the Buffer' })
 
 --lsp configs
 
 vim.lsp.config('lua_ls', {
-  on_init = function(client)
-    if client.workspace_folders then
-      local path = client.workspace_folders[1].name
-      if
-        path ~= vim.fn.stdpath('config')
-        and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc'))
-      then
-        return
-      end
-    end
+    on_init = function(client)
+        if client.workspace_folders then
+            local path = client.workspace_folders[1].name
+            if
+                path ~= vim.fn.stdpath('config')
+                and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc'))
+            then
+                return
+            end
+        end
 
-    client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
-      runtime = {
-        -- Tell the language server which version of Lua you're using (most
-        -- likely LuaJIT in the case of Neovim)
-        version = 'LuaJIT',
-        -- Tell the language server how to find Lua modules same way as Neovim
-        -- (see `:h lua-module-load`)
-        path = {
-          'lua/?.lua',
-          'lua/?/init.lua',
-        },
-      },
-      -- Make the server aware of Neovim runtime files
-      workspace = {
-        checkThirdParty = false,
-        library = {
-          vim.env.VIMRUNTIME,
-          -- For LSP Settings Type Annotations: https://github.com/neovim/nvim-lspconfig#lsp-settings-type-annotations
-          vim.api.nvim_get_runtime_file("lua/lspconfig", false)[1],
-        },
-      },
-    })
-  end,
-  settings = {
-    Lua = {},
-  },
+        client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
+            runtime = {
+                -- Tell the language server which version of Lua you're using (most
+                -- likely LuaJIT in the case of Neovim)
+                version = 'LuaJIT',
+                -- Tell the language server how to find Lua modules same way as Neovim
+                -- (see `:h lua-module-load`)
+                path = {
+                    'lua/?.lua',
+                    'lua/?/init.lua',
+                },
+            },
+            -- Make the server aware of Neovim runtime files
+            workspace = {
+                checkThirdParty = false,
+                library = {
+                    vim.env.VIMRUNTIME,
+                    -- For LSP Settings Type Annotations: https://github.com/neovim/nvim-lspconfig#lsp-settings-type-annotations
+                    vim.api.nvim_get_runtime_file('lua/lspconfig', false)[1],
+                },
+            },
+        })
+    end,
+    settings = {
+        Lua = {},
+    },
 })
 
 vim.lsp.enable('lua_ls')
-
 vim.lsp.enable('stylua')
-
+vim.lsp.enable('clangd')
