@@ -1,3 +1,10 @@
+-- disable netrw at the very start of your init.lua
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
+-- optionally enable 24-bit colour
+vim.opt.termguicolors = true
+
 -- Set <space> as the leader key
 -- See `:h mapleader`
 -- NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
@@ -15,7 +22,7 @@ vim.o.number = true -- Show line numbers in a column.
 
 -- Show line numbers relative to where the cursor is.
 -- Affects the 'number' option above, see `:h number_relativenumber`.
--- vim.o.relativenumber = true
+vim.o.relativenumber = false
 
 -- Sync clipboard between OS and Neovim. Schedule the setting after `UIEnter` because it can
 -- increase startup-time. Remove this option if you want your OS clipboard to remain independent.
@@ -54,6 +61,10 @@ vim.keymap.set({ 'n' }, '<A-h>', '<C-w>h')
 vim.keymap.set({ 'n' }, '<A-j>', '<C-w>j')
 vim.keymap.set({ 'n' }, '<A-k>', '<C-w>k')
 vim.keymap.set({ 'n' }, '<A-l>', '<C-w>l')
+
+vim.keymap.set({ 'n' }, '<Leader>n', function()
+    vim.o.relativenumber = not vim.o.relativenumber
+end, { desc = 'toggle the side numbers to relative' })
 
 -- AUTOCOMMANDS (EVENT HANDLERS)
 --
@@ -101,12 +112,17 @@ vim.pack.add({
     'https://github.com/lewis6991/gitsigns.nvim',
     -- Icons
     'https://github.com/nvim-tree/nvim-web-devicons',
+    'https://github.com/nvim-mini/mini.icons',
     -- Shows hints for the key
     'https://github.com/folke/which-key.nvim',
     -- todos
     'https://github.com/folke/todo-comments.nvim',
     -- formatter
     'https://github.com/stevearc/conform.nvim',
+    -- status bar
+    'https://github.com/nvim-lualine/lualine.nvim',
+    -- file manager
+    'https://github.com/nvim-tree/nvim-tree.lua',
 })
 
 require('fzf-lua').setup({ fzf_colors = true })
@@ -114,6 +130,7 @@ require('mini.completion').setup({})
 require('quicker').setup({})
 require('gitsigns').setup({})
 require('nvim-web-devicons').setup({})
+require('mini.icons').setup({})
 require('which-key').setup({ delay = 0 })
 require('todo-comments').setup({})
 require('conform').setup({
@@ -125,11 +142,17 @@ require('conform').setup({
         rust = { 'rustfmt', lsp_format = 'fallback' },
         -- Conform will run the first available formatter
         javascript = { 'prettierd', 'prettier', stop_after_first = true },
+        --  c and cpp
+        cpp = { 'clang-format' },
+        c = { 'clang-format' },
     },
 })
 vim.api.nvim_create_user_command('Format', function()
     require('conform').format()
 end, { desc = 'Format the Buffer' })
+
+require('lualine').setup({})
+require('nvim-tree').setup({})
 
 --lsp configs
 
