@@ -11,6 +11,7 @@ require('conform').setup({
         --  c and cpp
         cpp = { 'clang-format' },
         c = { 'clang-format' },
+        markdown = { 'rumdl' },
     },
 })
 vim.api.nvim_create_user_command('Format', function()
